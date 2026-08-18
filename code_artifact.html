@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>فرسان الأرقام: مغامرة الجمع بين العلوم</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Cairo & Tajawal -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        * {
+            font-family: 'Cairo', 'Tajawal', sans-serif;
+            user-select: none;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+            min-height: 100vh;
+        }
+
+        .bg-pattern {
+            background-color: #fdfbf7;
+            background-image: radial-gradient(#d97706 0.75px, transparent 0.75px), radial-gradient(#059669 0.75px, #fdfbf7 0.75px);
+            background-size: 30px 30px;
+            background-position: 0 0, 15px 15px;
+        }
+
+        .digit-box {
+            font-family: 'Cairo', sans-serif;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .digit-box.active {
+            border-color: #d97706;
+            box-shadow: 0 0 0 4px rgba(217, 119, 6, 0.25);
+            transform: scale(1.05);
+        }
+
+        .carry-box {
+            transition: all 0.3s ease;
+        }
+
+        .carry-box.active {
+            background-color: #fef3c7;
+            border-color: #d97706;
+            animation: pulse-border 1.5s infinite;
+        }
+
+        @keyframes pulse-border {
+            0%, 100% { border-color: #d97706; }
+            50% { border-color: #f59e0b; box-shadow: 0 0 10px rgba(245, 158, 11, 0.5); }
+        }
+
+        .bounce-gentle {
+            animation: bounceGentle 2s infinite;
+        }
+
+        @keyframes bounceGentle {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
+        }
+
+        .btn-game {
+            transition: all 0.15s ease-out;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.15);
+        }
+        .btn-game:active {
+            transform: translateY(3px);
+            box-shadow: 0 1px 0 rgba(0,0,0,0.15);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-pattern text-slate-800 min-h-screen flex flex-col justify-between overflow-x-hidden">
+
+    <!-- Header Bar -->
+    <header class="bg-gradient-to-r from-emerald-800 via-teal-800 to-indigo-900 text-white shadow-xl sticky top-0 z-50 border-b-4 border-amber-400">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-3">
+            
+            <div class="flex items-center gap-3">
+                <div class="bg-amber-400 text-emerald-950 w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shadow-lg font-black transform -rotate-3">
+                    <i class="fa-solid fa-calculator"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl md:text-2xl font-black tracking-wide text-amber-300">فرسان الأرقام</h1>
+                    <p class="text-xs text-emerald-100 font-medium">الجمع ضمن ٤ منازل بالربط بين المواد الدراسية</p>
+                </div>
+            </div>
+
+            <!-- Stats Bar -->
+            <div class="flex items-center gap-3 bg-emerald-950/60 backdrop-blur px-4 py-2 rounded-xl border border-emerald-600/40">
+                <div class="flex items-center gap-1.5 px-2 py-1 bg-amber-500/20 rounded-lg border border-amber-400/30">
+                    <i class="fa-solid fa-star text-amber-300 text-lg"></i>
+                    <span id="score-display" class="font-bold text-amber-300 text-lg">٠</span>
+                    <span class="text-xs text-amber-200">نقطة</span>
+                </div>
+                
+                <div class="flex items-center gap-1.5 px-2 py-1 bg-emerald-500/20 rounded-lg border border-emerald-400/30">
+                    <i class="fa-solid fa-fire text-orange-400 text-lg"></i>
+                    <span id="streak-display" class="font-bold text-orange-300 text-lg">٠</span>
+                    <span class="text-xs text-emerald-200">متتالي</span>
+                </div>
+
+                <button id="sound-toggle" onclick="toggleSound()" class="p-2 bg-white/10 hover:bg-white/20 rounded-lg transition text-white">
+                    <i id="sound-icon" class="fa-solid fa-volume-high"></i>
+                </button>
+            </div>
+
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="max-w-6xl mx-auto px-4 py-6 flex-grow w-full">
+
+        <!-- Mode Selector Navigation -->
+        <nav class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+            <button onclick="switchMode('vertical')" id="nav-vertical" class="btn-game nav-btn active bg-amber-500 text-amber-950 border-2 border-amber-300 p-3 rounded-2xl flex items-center justify-center gap-2 font-bold text-sm md:text-base">
+                <i class="fa-solid fa-square-plus text-lg"></i>
+                <span>الجمع العمودي</span>
+            </button>
+            <button onclick="switchMode('integration')" id="nav-integration" class="btn-game nav-btn bg-white text-slate-700 border-2 border-slate-200 hover:border-emerald-400 p-3 rounded-2xl flex items-center justify-center gap-2 font-bold text-sm md:text-base">
+                <i class="fa-solid fa-book-open text-lg text-emerald-600"></i>
+                <span>مغامرة المواد</span>
+            </button>
+            <button onclick="switchMode('speed')" id="nav-speed" class="btn-game nav-btn bg-white text-slate-700 border-2 border-slate-200 hover:border-indigo-400 p-3 rounded-2xl flex items-center justify-center gap-2 font-bold text-sm md:text-base">
+                <i class="fa-solid fa-bolt text-lg text-indigo-600"></i>
+                <span>تحدي الخوارزمي</span>
+            </button>
+            <button onclick="switchMode('garden')" id="nav-garden" class="btn-game nav-btn bg-white text-slate-700 border-2 border-slate-200 hover:border-teal-400 p-3 rounded-2xl flex items-center justify-center gap-2 font-bold text-sm md:text-base">
+                <i class="fa-solid fa-tree text-lg text-teal-600"></i>
+                <span>بستان الأوسمة</span>
+            </button>
+        </nav>
+
+        <!-- MODE 1: Interactive Vertical Addition (الجمع العمودي step by step from Right to Left) -->
+        <section id="mode-vertical" class="mode-section block">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                <!-- Main Board Panel -->
+                <div class="lg:col-span-2 bg-white rounded-3xl p-6 shadow-xl border-2 border-amber-100 flex flex-col justify-between">
+                    <div>
+                        <!-- Subject Badge Context -->
+                        <div id="vertical-subject-badge" class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-sm mb-4">
+                            <i class="fa-solid fa-compass"></i>
+                            <span id="vertical-subject-text">تنشئة وطنية: حساب مسافات العودة</span>
+                        </div>
+
+                        <!-- Addition Rule Guidance Notice -->
+                        <div class="bg-amber-50/80 border-r-4 border-amber-500 p-3.5 rounded-xl mb-6 text-slate-700 text-sm flex items-start gap-3">
+                            <i class="fa-solid fa-lightbulb text-amber-600 text-xl mt-0.5"></i>
+                            <div>
+                                <span class="font-bold text-amber-900 block mb-0.5">قاعدة الجمع العمودي:</span>
+                                نبدأ الجمع دائماً من **اليمين إلى اليسار**: (الآحاد ⬅ العشرات ⬅ المئات ⬅ أحاد الألوف). إذا كان المجموع ٠١ أو أكثر، ضع الآحاد بالأسفل واحمل العشرات فوق المنزلة التالية!
+                            </div>
+                        </div>
+
+                        <!-- Vertical Calculation Grid -->
+                        <div class="max-w-md mx-auto my-4 bg-slate-50 p-6 rounded-2xl border-2 border-slate-200 shadow-inner">
+                            
+                            <!-- Place Value Headers -->
+                            <div class="grid grid-cols-4 gap-2 text-center text-xs md:text-sm font-black text-slate-500 mb-2 border-b pb-2">
+                                <div class="text-indigo-600">أحاد الألوف</div>
+                                <div class="text-teal-600">المئات</div>
+                                <div class="text-amber-600">العشرات</div>
+                                <div class="text-rose-600">الآحاد (البداية)</div>
+                            </div>
+
+                            <!-- Carry Row (الحمل) -->
+                            <div class="grid grid-cols-4 gap-2 mb-3">
+                                <div class="text-center">
+                                    <!-- No carry above thousands -->
+                                    <span class="text-xs text-slate-300">-</span>
+                                </div>
+                                <div id="carry-box-3" class="carry-box h-10 rounded-xl border-2 border-dashed border-slate-300 flex items-center justify-center text-amber-700 font-black text-lg bg-white">
+                                    -
+                                </div>
+                                <div id="carry-box-2" class="carry-box h-10 rounded-xl border-2 border-dashed border-slate-300 flex items-center justify-center text-amber-700 font-black text-lg bg-white">
+                                    -
+                                </div>
+                                <div id="carry-box-1" class="carry-box h-10 rounded-xl border-2 border-dashed border-slate-300 flex items-center justify-center text-amber-700 font-black text-lg bg-white">
+                                    -
+                                </div>
+                            </div>
+
+                            <!-- Number 1 Row -->
+                            <div class="grid grid-cols-4 gap-2 text-center mb-2">
+                                <div id="n1-d3" class="digit-display text-2xl md:text-3xl font-black text-slate-800 bg-white py-2 rounded-xl border border-slate-200">٠</div>
+                                <div id="n1-d2" class="digit-display text-2xl md:text-3xl font-black text-slate-800 bg-white py-2 rounded-xl border border-slate-200">٠</div>
+                                <div id="n1-d1" class="digit-display text-2xl md:text-3xl font-black text-slate-800 bg-white py-2 rounded-xl border border-slate-200">٠</div>
+                                <div id="n1-d0" class="digit-display text-2xl md:text-3xl font-black text-slate-800 bg-white py-2 rounded-xl border border-slate-200">٠</div>
+                            </div>
+
+                            <!-- Operator & Number 2 Row -->
+                            <div class="relative grid grid-cols-4 gap-2 text-center mb-3">
+                                <span class="absolute -right-6 top-1/2 -translate-y-1/2 text-3xl font-black text-emerald-600">+</span>
+                                <div id="n2-d3" class="digit-display text-2xl md:text-3xl font-black text-slate-800 bg-white py-2 rounded-xl border border-slate-200">٠</div>
+                                <div id="n2-d2" class="digit-display text-2xl md:text-3xl font-black text-slate-800 bg-white py-2 rounded-xl border border-slate-200">٠</div>
+                                <div id="n2-d1" class="digit-display text-2xl md:text-3xl font-black text-slate-800 bg-white py-2 rounded-xl border border-slate-200">٠</div>
+                                <div id="n2-d0" class="digit-display text-2xl md:text-3xl font-black text-slate-800 bg-white py-2 rounded-xl border border-slate-200">٠</div>
+                            </div>
+
+                            <!-- Equals Bar Line -->
+                            <div class="h-1.5 bg-slate-800 rounded-full mb-4"></div>
+
+                            <!-- Result Row -->
+                            <div class="grid grid-cols-4 gap-2 text-center">
+                                <div id="res-d3" class="digit-box text-2xl md:text-3xl font-black py-2 rounded-xl border-2 border-slate-300 bg-white text-slate-400">؟</div>
+                                <div id="res-d2" class="digit-box text-2xl md:text-3xl font-black py-2 rounded-xl border-2 border-slate-300 bg-white text-slate-400">؟</div>
+                                <div id="res-d1" class="digit-box text-2xl md:text-3xl font-black py-2 rounded-xl border-2 border-slate-300 bg-white text-slate-400">؟</div>
+                                <div id="res-d0" class="digit-box active text-2xl md:text-3xl font-black py-2 rounded-xl border-2 border-amber-500 bg-amber-50 text-amber-900">؟</div>
+                            </div>
+
+                        </div>
+
+                        <!-- Step Prompt Instruction -->
+                        <div id="step-instruction" class="bg-indigo-900 text-white p-4 rounded-2xl text-center shadow-md my-4 flex items-center justify-center gap-3">
+                            <i class="fa-solid fa-arrow-left-long text-amber-400 text-xl animate-pulse"></i>
+                            <span id="step-instruction-text" class="text-base md:text-lg font-bold">ابدأ بجمع منزلة الآحاد: اجمع الرقم الأول والرقم الثاني</span>
+                        </div>
+                    </div>
+
+                    <!-- Action Controls -->
+                    <div class="flex items-center justify-between gap-3 pt-4 border-t border-slate-100">
+                        <button onclick="newVerticalProblem()" class="btn-game bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-5 py-2.5 rounded-xl text-sm flex items-center gap-2">
+                            <i class="fa-solid fa-rotate-right"></i>
+                            <span>مسألة جديدة</span>
+                        </button>
+                        <button onclick="showVerticalHint()" class="btn-game bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold px-5 py-2.5 rounded-xl text-sm flex items-center gap-2">
+                            <i class="fa-solid fa-hand-holding-hand"></i>
+                            <span>مساعدة الخوارزمي</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Right Side Interactive Input & Keypad -->
+                <div class="bg-white rounded-3xl p-6 shadow-xl border-2 border-slate-100 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <h2 class="font-black text-slate-800 text-lg flex items-center gap-2">
+                                <i class="fa-solid fa-keyboard text-emerald-600"></i>
+                                <span>لوحة الأرقام الهندية</span>
+                            </h2>
+                            <span class="text-xs font-bold text-slate-400">ادخل الإجابة</span>
+                        </div>
+
+                        <!-- Current Step Monitor -->
+                        <div class="bg-slate-100 p-3 rounded-2xl text-center mb-4 border border-slate-200">
+                            <div class="text-xs text-slate-500 mb-1">المنزلة الحالية:</div>
+                            <div id="current-place-name" class="font-black text-lg text-emerald-800">منزلة الآحاد</div>
+                        </div>
+
+                        <!-- On Screen Keypad (Eastern Arabic Digits) -->
+                        <div class="grid grid-cols-3 gap-2 mb-4">
+                            <button onclick="pressDigit('٧')" class="btn-game bg-slate-50 hover:bg-amber-100 text-slate-800 font-black text-2xl py-3 rounded-2xl border border-slate-200">٧</button>
+                            <button onclick="pressDigit('٨')" class="btn-game bg-slate-50 hover:bg-amber-100 text-slate-800 font-black text-2xl py-3 rounded-2xl border border-slate-200">٨</button>
+                            <button onclick="pressDigit('٩')" class="btn-game bg-slate-50 hover:bg-amber-100 text-slate-800 font-black text-2xl py-3 rounded-2xl border border-slate-200">٩</button>
+                            
+                            <button onclick="pressDigit('٤')" class="btn-game bg-slate-50 hover:bg-amber-100 text-slate-800 font-black text-2xl py-3 rounded-2xl border border-slate-200">٤</button>
+                            <button onclick="pressDigit('٥')" class="btn-game bg-slate-50 hover:bg-amber-100 text-slate-800 font-black text-2xl py-3 rounded-2xl border border-slate-200">٥</button>
+                            <button onclick="pressDigit('٦')" class="btn-game bg-slate-50 hover:bg-amber-100 text-slate-800 font-black text-2xl py-3 rounded-2xl border border-slate-200">٦</button>
+                            
+                            <button onclick="pressDigit('١')" class="btn-game bg-slate-50 hover:bg-amber-100 text-slate-800 font-black text-2xl py-3 rounded-2xl border border-slate-200">١</button>
+                            <button onclick="pressDigit('٢')" class="btn-game bg-slate-50 hover:bg-amber-100 text-slate-800 font-black text-2xl py-3 rounded-2xl border border-slate-200">٢</button>
+                            <button onclick="pressDigit('٣')" class="btn-game bg-slate-50 hover:bg-amber-100 text-slate-800 font-black text-2xl py-3 rounded-2xl border border-slate-200">٣</button>
+                            
+                            <button onclick="clearInput()" class="btn-game bg-rose-100 hover:bg-rose-200 text-rose-800 font-bold text-base py-3 rounded-2xl border border-rose-200">مسح</button>
+                            <button onclick="pressDigit('٠')" class="btn-game bg-slate-50 hover:bg-amber-100 text-slate-800 font-black text-2xl py-3 rounded-2xl border border-slate-200">٠</button>
+                            <button onclick="submitStepAnswer()" class="btn-game bg-emerald-600 hover:bg-emerald-700 text-white font-black text-lg py-3 rounded-2xl border border-emerald-500">تأكيد</button>
+                        </div>
+                    </div>
+
+                    <!-- Keyboard Quick Note -->
+                    <div class="text-center text-xs text-slate-400 bg-slate-50 p-2 rounded-xl">
+                        <i class="fa-solid fa-circle-info text-amber-500"></i> يمكنك أيضاً استخدام الأرقام من لوحة المفاتيح
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- MODE 2: Interdisciplinary Integration (مغامرة المواد: إسلامية، لغة عربية، تنشئة وطنية) -->
+        <section id="mode-integration" class="mode-section hidden">
+            <div class="bg-white rounded-3xl p-6 shadow-xl border-2 border-emerald-100">
+                
+                <!-- Category Tabs Filter -->
+                <div class="flex flex-wrap items-center justify-between gap-3 mb-6 pb-4 border-b">
+                    <h2 class="text-xl font-black text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-graduation-cap text-emerald-600"></i>
+                        <span>مغامرات التكافل والتكامل بين المواد</span>
+                    </h2>
+                    
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="filterQuests('all')" class="quest-filter active px-4 py-1.5 rounded-full text-xs md:text-sm font-bold bg-slate-800 text-white">الكل</button>
+                        <button onclick="filterQuests('islamic')" class="quest-filter px-4 py-1.5 rounded-full text-xs md:text-sm font-bold bg-emerald-100 text-emerald-800 hover:bg-emerald-200">🕌 تربية إسلامية</button>
+                        <button onclick="filterQuests('arabic')" class="quest-filter px-4 py-1.5 rounded-full text-xs md:text-sm font-bold bg-amber-100 text-amber-800 hover:bg-amber-200">📖 لغة عربية</button>
+                        <button onclick="filterQuests('national')" class="quest-filter px-4 py-1.5 rounded-full text-xs md:text-sm font-bold bg-indigo-100 text-indigo-800 hover:bg-indigo-200">🇵🇸 تنشئة وطنية</button>
+                    </div>
+                </div>
+
+                <!-- Story Quest Question Card -->
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+                    
+                    <div class="md:col-span-8 bg-gradient-to-br from-amber-50 to-orange-50 p-6 rounded-3xl border-2 border-amber-200/80 flex flex-col justify-between">
+                        <div>
+                            <!-- Subject Tag & Icon -->
+                            <div class="flex items-center justify-between mb-4">
+                                <span id="quest-subject-tag" class="px-3.5 py-1 rounded-full text-xs font-black bg-emerald-600 text-white flex items-center gap-1.5">
+                                    <i id="quest-subject-icon" class="fa-solid fa-mosque"></i>
+                                    <span id="quest-subject-title">التربية الإسلامية: زكاة المال والصدقات</span>
+                                </span>
+                                <span class="text-xs font-bold text-slate-400">سؤال رقم <span id="quest-index-display">١</span></span>
+                            </div>
+
+                            <!-- Context Story Title -->
+                            <h3 id="quest-story-title" class="text-xl font-black text-slate-900 mb-3">حساب طرود الخير في شهر رمضان</h3>
+                            
+                            <!-- Story Paragraph -->
+                            <p id="quest-story-body" class="text-slate-700 leading-relaxed font-medium text-base mb-6 bg-white/70 p-4 rounded-2xl border border-amber-100">
+                                وزعت جمعية البر والتقوى ٣٤٥٠ طرداً غذائياً في الأسبوع الأول من شهر رمضان المبارك، ثم وزعت ٢٧٨٥ طرداً في الأسبوع الثاني. ما مجموع الطرود الموزعة في الأسبوعين معاً؟
+                            </p>
+
+                            <!-- Mathematical Expression Horizontal Representation -->
+                            <div class="bg-white p-4 rounded-2xl border border-amber-200 shadow-sm text-center mb-6">
+                                <span class="text-xs text-slate-500 block mb-1">المعادلة الحسابية بالأرقام العربية الهندية:</span>
+                                <div class="text-2xl md:text-3xl font-black text-slate-800 flex items-center justify-center gap-3 dir-rtl">
+                                    <span id="quest-num1" class="text-emerald-700">٣٤٥٠</span>
+                                    <span class="text-amber-600">+</span>
+                                    <span id="quest-num2" class="text-indigo-700">٢٧٨٥</span>
+                                    <span class="text-slate-400">=</span>
+                                    <span id="quest-user-ans" class="bg-amber-100 text-amber-900 px-4 py-1 rounded-xl border border-amber-300">؟</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Extra Subject Fact / Moral Lesson Box -->
+                        <div id="quest-fact-box" class="bg-emerald-900 text-emerald-100 p-3.5 rounded-2xl text-xs md:text-sm flex items-center gap-3">
+                            <i class="fa-solid fa-heart text-rose-400 text-lg"></i>
+                            <span id="quest-fact-text">قيمة إسلامية: قال رسول الله ﷺ: "أَحَبُّ الأَعْمَالِ إِلَى اللَّهِ سُرُورٌ تُدْخِلُهُ عَلَى مُسْلِمٍ".</span>
+                        </div>
+                    </div>
+
+                    <!-- Right Column Interactive Input Options -->
+                    <div class="md:col-span-4 flex flex-col justify-between space-y-4">
+                        <div class="bg-slate-50 p-5 rounded-3xl border-2 border-slate-200">
+                            <h4 class="font-black text-slate-800 mb-3 text-sm flex items-center gap-2">
+                                <i class="fa-solid fa-check-double text-amber-600"></i>
+                                <span>اختر الإجابة الصحيحة أو اكتبها:</span>
+                            </h4>
+
+                            <!-- Multiple Choice Options -->
+                            <div id="quest-options-container" class="space-y-2.5 mb-4">
+                                <!-- Option buttons injected dynamically -->
+                            </div>
+
+                            <div class="relative flex py-2 items-center">
+                                <div class="flex-grow border-t border-slate-200"></div>
+                                <span class="flex-shrink mx-2 text-xs text-slate-400 font-bold">أو أدخل الإجابة</span>
+                                <div class="flex-grow border-t border-slate-200"></div>
+                            </div>
+
+                            <!-- Manual Digit Answer Box -->
+                            <div class="flex gap-2 my-2">
+                                <input type="text" id="quest-manual-input" readonly placeholder="مثال: ٦٢٣٥" class="w-full text-center text-xl font-black py-2 rounded-xl border-2 border-slate-300 bg-white text-slate-800">
+                            </div>
+
+                            <!-- Mini Keypad for Story Quest -->
+                            <div class="grid grid-cols-5 gap-1.5 mt-3">
+                                <button onclick="pressQuestDigit('١')" class="btn-game bg-white hover:bg-amber-100 text-slate-800 font-black py-2 rounded-lg border border-slate-200 text-sm">١</button>
+                                <button onclick="pressQuestDigit('٢')" class="btn-game bg-white hover:bg-amber-100 text-slate-800 font-black py-2 rounded-lg border border-slate-200 text-sm">٢</button>
+                                <button onclick="pressQuestDigit('٣')" class="btn-game bg-white hover:bg-amber-100 text-slate-800 font-black py-2 rounded-lg border border-slate-200 text-sm">٣</button>
+                                <button onclick="pressQuestDigit('٤')" class="btn-game bg-white hover:bg-amber-100 text-slate-800 font-black py-2 rounded-lg border border-slate-200 text-sm">٤</button>
+                                <button onclick="pressQuestDigit('٥')" class="btn-game bg-white hover:bg-amber-100 text-slate-800 font-black py-2 rounded-lg border border-slate-200 text-sm">٥</button>
+                                <button onclick="pressQuestDigit('٦')" class="btn-game bg-white hover:bg-amber-100 text-slate-800 font-black py-2 rounded-lg border border-slate-200 text-sm">٦</button>
+                                <button onclick="pressQuestDigit('٧')" class="btn-game bg-white hover:bg-amber-100 text-slate-800 font-black py-2 rounded-lg border border-slate-200 text-sm">٧</button>
+                                <button onclick="pressQuestDigit('٨')" class="btn-game bg-white hover:bg-amber-100 text-slate-800 font-black py-2 rounded-lg border border-slate-200 text-sm">٨</button>
+                                <button onclick="pressQuestDigit('٩')" class="btn-game bg-white hover:bg-amber-100 text-slate-800 font-black py-2 rounded-lg border border-slate-200 text-sm">٩</button>
+                                <button onclick="pressQuestDigit('٠')" class="btn-game bg-white hover:bg-amber-100 text-slate-800 font-black py-2 rounded-lg border border-slate-200 text-sm">٠</button>
+                            </div>
+
+                            <button onclick="clearQuestInput()" class="w-full mt-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-1.5 rounded-xl text-xs">مسح المدخلات</button>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button onclick="submitQuestAnswer()" class="btn-game w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black text-lg py-3 rounded-2xl shadow-lg border border-emerald-500 flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-paper-plane"></i>
+                            <span>إرسال الإجابة</span>
+                        </button>
+                    </div>
+
+                </div>
+
+            </div>
+        </section>
+
+        <!-- MODE 3: Speed Challenge (تحدي الخوارزمي السريع) -->
+        <section id="mode-speed" class="mode-section hidden">
+            <div class="bg-white rounded-3xl p-6 shadow-xl border-2 border-indigo-100 max-w-2xl mx-auto">
+                <div class="text-center mb-6">
+                    <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-100 text-indigo-900 font-black text-sm mb-2">
+                        <i class="fa-solid fa-bolt text-amber-500"></i>
+                        <span>تحدي السرعة في ٦٠ ثانية</span>
+                    </div>
+                    <h2 class="text-2xl font-black text-slate-900">اختبار الخوارزمي للحساب السريع</h2>
+                    <p class="text-xs text-slate-500 mt-1">حل أكبر عدد من المسائل ضمن ٤ منازل بالأرقام الهندية!</p>
+                </div>
+
+                <!-- Timer & Score Bar -->
+                <div class="flex items-center justify-around bg-slate-900 text-white p-4 rounded-2xl mb-6 shadow-md">
+                    <div class="text-center">
+                        <span class="text-xs text-slate-400 block">الوقت المتبقي</span>
+                        <span id="speed-timer" class="text-3xl font-black text-amber-400">٦٠</span>
+                    </div>
+                    <div class="h-10 w-0.5 bg-slate-700"></div>
+                    <div class="text-center">
+                        <span class="text-xs text-slate-400 block">الإجابات الصحيحة</span>
+                        <span id="speed-score" class="text-3xl font-black text-emerald-400">٠</span>
+                    </div>
+                </div>
+
+                <!-- Speed Equation Display -->
+                <div class="bg-indigo-50 p-6 rounded-3xl border-2 border-indigo-200 text-center mb-6">
+                    <div id="speed-equation" class="text-3xl md:text-4xl font-black text-indigo-950 dir-rtl">
+                        ٣٤١٢ + ٤٥٧٦ = ؟
+                    </div>
+                </div>
+
+                <!-- Input & Keypad -->
+                <div class="space-y-4">
+                    <input type="text" id="speed-input" readonly placeholder="اكتب النتيجة..." class="w-full text-center text-3xl font-black py-3 rounded-2xl border-2 border-indigo-300 bg-white text-slate-900 shadow-inner">
+                    
+                    <div class="grid grid-cols-3 gap-2">
+                        <button onclick="pressSpeedDigit('٧')" class="btn-game bg-slate-100 hover:bg-indigo-100 text-slate-800 font-black text-2xl py-3 rounded-2xl border border-slate-200">٧</button>
+                        <button onclick="pressSpeedDigit('٨')" class="btn-game bg-slate-100 hover:bg-indigo-100 text-slate-800 font-black text-2xl py-3 rounded-2xl border border-slate-200">٨</button>
+                        <button onclick="pressSpeedDigit('٩')" class="btn-game bg-slate-100 hover:bg-indigo-100 text-slate-800 font-black text-2xl py-3 rounded-2xl border border-slate-200">٩</button>
+                        
+                        <button onclick="pressSpeedDigit('٤')" class="btn-game bg-slate-100 hover:bg-indigo-100 text-slate-800 font-black text-2xl py-3 rounded-2xl border border-slate-200">٤</button>
+                        <button onclick="pressSpeedDigit('٥')" class="btn-game bg-slate-100 hover:bg-indigo-100 text-slate-800 font-black text-2xl py-3 rounded-2xl border border-slate-200">٥</button>
+                        <button onclick="pressSpeedDigit('٦')" class="btn-game bg-slate-100 hover:bg-indigo-100 text-slate-800 font-black text-2xl py-3 rounded-2xl border border-slate-200">٦</button>
+                        
+                        <button onclick="pressSpeedDigit('١')" class="btn-game bg-slate-100 hover:bg-indigo-100 text-slate-800 font-black text-2xl py-3 rounded-2xl border border-slate-200">١</button>
+                        <button onclick="pressSpeedDigit('٢')" class="btn-game bg-slate-100 hover:bg-indigo-100 text-slate-800 font-black text-2xl py-3 rounded-2xl border border-slate-200">٢</button>
+                        <button onclick="pressSpeedDigit('٣')" class="btn-game bg-slate-100 hover:bg-indigo-100 text-slate-800 font-black text-2xl py-3 rounded-2xl border border-slate-200">٣</button>
+                        
+                        <button onclick="clearSpeedInput()" class="btn-game bg-rose-100 text-rose-800 font-bold text-sm py-3 rounded-2xl">مسح</button>
+                        <button onclick="pressSpeedDigit('٠')" class="btn-game bg-slate-100 hover:bg-indigo-100 text-slate-800 font-black text-2xl py-3 rounded-2xl border border-slate-200">٠</button>
+                        <button onclick="submitSpeedAnswer()" class="btn-game bg-indigo-600 hover:bg-indigo-700 text-white font-black text-lg py-3 rounded-2xl border border-indigo-500">تأكيد</button>
+                    </div>
+
+                    <button id="start-speed-btn" onclick="startSpeedGame()" class="w-full btn-game bg-amber-500 hover:bg-amber-600 text-amber-950 font-black text-lg py-3.5 rounded-2xl shadow-lg mt-2">
+                        <i class="fa-solid fa-play ml-2"></i> بدء التحدي الآن
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- MODE 4: Garden & Badges (بستان الإنجازات والأوسمة الوطنية) -->
+        <section id="mode-garden" class="mode-section hidden">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+                
+                <!-- Tree Growth Canvas Panel -->
+                <div class="md:col-span-6 bg-gradient-to-b from-teal-900 to-emerald-950 text-white p-6 rounded-3xl shadow-xl flex flex-col justify-between items-center text-center">
+                    <div>
+                        <span class="px-3.5 py-1 rounded-full bg-teal-800 text-teal-200 font-bold text-xs">شجرة الزيتون المباركة</span>
+                        <h2 class="text-2xl font-black text-amber-300 mt-2">بستان المعرفة والوطن</h2>
+                        <p class="text-xs text-teal-100 mt-1">تنمو شجرتك وتثمر كلما حللت مسائل الجمع بشكل صحيح!</p>
+                    </div>
+
+                    <!-- Visual Tree State -->
+                    <div class="my-8 relative flex flex-col items-center">
+                        <!-- Tree Visual Elements -->
+                        <div id="tree-container" class="relative transition-all duration-500 transform scale-100">
+                            <i id="tree-icon" class="fa-solid fa-seedling text-emerald-400 text-8xl bounce-gentle"></i>
+                        </div>
+                        <div class="w-32 h-4 bg-emerald-900/80 rounded-full mt-2 filter blur-xs"></div>
+                        <span id="tree-stage-title" class="mt-4 font-black text-amber-300 text-lg bg-teal-900/80 px-4 py-1 rounded-xl border border-teal-700">المرحلة ١: الشتلة الأولى</span>
+                    </div>
+
+                    <div class="w-full bg-teal-900/60 p-4 rounded-2xl border border-teal-700">
+                        <div class="flex justify-between text-xs font-bold text-teal-200 mb-1">
+                            <span>التقدم نحو المرحلة التالية</span>
+                            <span id="tree-progress-text">٠ / ٥٠ نقطة</span>
+                        </div>
+                        <div class="w-full bg-teal-950 h-3 rounded-full overflow-hidden p-0.5 border border-teal-800">
+                            <div id="tree-progress-bar" class="bg-amber-400 h-full rounded-full transition-all duration-300" style="width: 5%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Badges List Panel -->
+                <div class="md:col-span-6 bg-white p-6 rounded-3xl shadow-xl border-2 border-slate-100">
+                    <h3 class="text-xl font-black text-slate-900 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-award text-amber-500"></i>
+                        <span>لوحة الأوسمة والإنجازات</span>
+                    </h3>
+
+                    <div class="space-y-3 custom-scrollbar max-h-[420px] overflow-y-auto pr-1">
+                        
+                        <!-- Badge 1 -->
+                        <div id="badge-khwarizmi" class="p-3.5 rounded-2xl border-2 border-slate-200 bg-slate-50 flex items-center gap-3 opacity-60">
+                            <div class="w-12 h-12 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center text-2xl font-black shrink-0">
+                                <i class="fa-solid fa-calculator"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-black text-slate-800 text-sm">وسام الخوارزمي الصغير</h4>
+                                <p class="text-xs text-slate-500">حل ٥ مسائل جمع عمودي بدون أخطاء.</p>
+                            </div>
+                        </div>
+
+                        <!-- Badge 2 -->
+                        <div id="badge-arabic" class="p-3.5 rounded-2xl border-2 border-slate-200 bg-slate-50 flex items-center gap-3 opacity-60">
+                            <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center text-2xl font-black shrink-0">
+                                <i class="fa-solid fa-book-bookmark"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-black text-slate-800 text-sm">وسام أديب العربية</h4>
+                                <p class="text-xs text-slate-500">إجابة ٣ أسئلة لفظية في مادة اللغة العربية.</p>
+                            </div>
+                        </div>
+
+                        <!-- Badge 3 -->
+                        <div id="badge-islamic" class="p-3.5 rounded-2xl border-2 border-slate-200 bg-slate-50 flex items-center gap-3 opacity-60">
+                            <div class="w-12 h-12 rounded-2xl bg-indigo-100 text-indigo-800 flex items-center justify-center text-2xl font-black shrink-0">
+                                <i class="fa-solid fa-hand-holding-heart"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-black text-slate-800 text-sm">وسام الفارس المسلم</h4>
+                                <p class="text-xs text-slate-500">حل مسائل الزكاة والصدقات في التربية الإسلامية.</p>
+                            </div>
+                        </div>
+
+                        <!-- Badge 4 -->
+                        <div id="badge-national" class="p-3.5 rounded-2xl border-2 border-slate-200 bg-slate-50 flex items-center gap-3 opacity-60">
+                            <div class="w-12 h-12 rounded-2xl bg-rose-100 text-rose-800 flex items-center justify-center text-2xl font-black shrink-0">
+                                <i class="fa-solid fa-map-location-dot"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-black text-slate-800 text-sm">وسام سفير الوطن</h4>
+                                <p class="text-xs text-slate-500">حساب المسافات الجغرافية بين المدن الفلسطينية والعربية.</p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Custom Modal Popup for Hints & Feedback -->
+    <div id="custom-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border-4 border-amber-400 text-center transform transition-all scale-100">
+            <div id="modal-icon-bg" class="w-16 h-16 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center text-3xl mx-auto mb-3">
+                <i id="modal-icon" class="fa-solid fa-star"></i>
+            </div>
+            <h3 id="modal-title" class="text-xl font-black text-slate-900 mb-2">ممتاز يا بطل!</h3>
+            <p id="modal-body" class="text-slate-600 text-sm leading-relaxed mb-6">لقد قمت بجمع المنزلة بشكل صحيح تماماً.</p>
+            <button onclick="closeModal()" class="btn-game w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded-2xl">
+                متابعة المغامرة
+            </button>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-400 text-xs text-center py-4 border-t border-slate-800 mt-8">
+        <div class="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-2">
+            <span>فرسان الأرقام © لعبة تعليمية تفاعلية لجمع الأعداد ضمن ٤ منازل بالربط بين المواد.</span>
+            <span class="text-amber-400 font-bold">الأرقام المستخدمة: العربية الهندية (٠، ١، ٢، ٣، ٤، ٥، ٦، ٧، ٨، ٩)</span>
+        </div>
+    </footer>
+
+    <script>
+        /* Web Audio API Synthesizer Sound Engine */
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        let soundEnabled = true;
+
+        function playTone(freq, type, duration) {
+            if (!soundEnabled) return;
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch(e){}
+        }
+
+        function playSuccessSound() {
+            playTone(523.25, 'sine', 0.15); // C5
+            setTimeout(() => playTone(659.25, 'sine', 0.15), 100); // E5
+            setTimeout(() => playTone(783.99, 'sine', 0.3), 200); // G5
+        }
+
+        function playErrorSound() {
+            playTone(200, 'sawtooth', 0.2);
+            setTimeout(() => playTone(150, 'sawtooth', 0.3), 150);
+        }
+
+        function playClickSound() {
+            playTone(400, 'triangle', 0.05);
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            const icon = document.getElementById('sound-icon');
+            if (soundEnabled) {
+                icon.className = 'fa-solid fa-volume-high';
+            } else {
+                icon.className = 'fa-solid fa-volume-xmark';
+            }
+        }
+
+        const HINDI_DIGITS = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+
+        function toHindi(num) {
+            return String(num).replace(/[0-9]/g, d => HINDI_DIGITS[parseInt(d)]);
+        }
+
+        function toStandard(str) {
+            return String(str).replace(/[٠-٩]/g, d => HINDI_DIGITS.indexOf(d));
+        }
+
+        /* Global Game State Variables */
+        let currentMode = 'vertical';
+        let score = 0;
+        let streak = 0;
+        
+        // Vertical Mode State
+        let num1 = 0, num2 = 0;
+        let digits1 = [], digits2 = [];
+        let currentStepIndex = 0; // 0 = Ones (آحاد), 1 = Tens (عشرات), 2 = Hundreds (مئات), 3 = Thousands (أحاد الألوف)
+        let carries = [0, 0, 0, 0]; // Carry over to [ones, tens, hundreds, thousands]
+        let userResultDigits = ['', '', '', ''];
+        let currentInputBuffer = '';
+
+        // Badges Progress
+        let verticalCorrectCount = 0;
+        let arabicCorrectCount = 0;
+        let islamicCorrectCount = 0;
+        let nationalCorrectCount = 0;
+
+        const placeNames = ['الآحاد', 'العشرات', 'المئات', 'أحاد الألوف'];
+
+        function newVerticalProblem() {
+            // Generate two 4-digit numbers ensuring sum is <= 9999
+            num1 = Math.floor(Math.random() * 4500) + 1200;
+            num2 = Math.floor(Math.random() * 4200) + 1100;
+
+            const str1 = String(num1).padStart(4, '0');
+            const str2 = String(num2).padStart(4, '0');
+
+            digits1 = str1.split('').map(Number);
+            digits2 = str2.split('').map(Number);
+
+            // Display in Hindi digits
+            for(let i = 0; i < 4; i++) {
+                // digits1[0] is thousands, digits1[3] is ones
+                document.getElementById(`n1-d${3-i}`).innerText = toHindi(digits1[i]);
+                document.getElementById(`n2-d${3-i}`).innerText = toHindi(digits2[i]);
+            }
+
+            // Reset UI
+            currentStepIndex = 0; // Start at Ones (far right)
+            carries = [0, 0, 0, 0];
+            userResultDigits = ['', '', '', ''];
+            currentInputBuffer = '';
+
+            for(let i = 1; i <= 3; i++) {
+                const cb = document.getElementById(`carry-box-${i}`);
+                cb.innerText = '-';
+                cb.classList.remove('active', 'bg-amber-100');
+            }
+
+            for(let i = 0; i < 4; i++) {
+                const rb = document.getElementById(`res-d${i}`);
+                rb.innerText = '؟';
+                rb.className = 'digit-box text-2xl md:text-3xl font-black py-2 rounded-xl border-2 border-slate-300 bg-white text-slate-400';
+            }
+
+            // Set context theme for vertical problem
+            const contexts = [
+                { title: 'تنشئة وطنية: قطف الزيتون في نابلس والقدس', text: 'حساب محاصيل الزيتون المبارك في القرى الوطنية' },
+                { title: 'تربية إسلامية: زكاة الثمار والتكافل', text: 'حساب الصدقات الموزعة على الأسر المتعففة' },
+                { title: 'لغة عربية: إهداءات الكتب للمكتبات', text: 'جمع المجلدات والكتب الأدبية والدواوين' }
+            ];
+            const randomCtx = contexts[Math.floor(Math.random() * contexts.length)];
+            document.getElementById('vertical-subject-text').innerText = randomCtx.title;
+
+            updateVerticalStepUI();
+        }
+
+        function updateVerticalStepUI() {
+            // Highlight active result digit box
+            for(let i = 0; i < 4; i++) {
+                const box = document.getElementById(`res-d${i}`);
+                if(i === currentStepIndex) {
+                    box.className = 'digit-box active text-2xl md:text-3xl font-black py-2 rounded-xl border-2 border-amber-500 bg-amber-50 text-amber-900';
+                } else if(userResultDigits[i] !== '') {
+                    box.className = 'digit-box text-2xl md:text-3xl font-black py-2 rounded-xl border-2 border-emerald-500 bg-emerald-50 text-emerald-900';
+                } else {
+                    box.className = 'digit-box text-2xl md:text-3xl font-black py-2 rounded-xl border-2 border-slate-300 bg-white text-slate-400';
+                }
+            }
+
+            document.getElementById('current-place-name').innerText = `منزلة ${placeNames[currentStepIndex]}`;
+            currentInputBuffer = '';
+
+            // Update Step Instruction Text
+            const p1 = digits1[3 - currentStepIndex];
+            const p2 = digits2[3 - currentStepIndex];
+            const carry = carries[currentStepIndex];
+
+            let text = `اجمع خانة ${placeNames[currentStepIndex]}: ${toHindi(p1)} + ${toHindi(p2)}`;
+            if(carry > 0) {
+                text += ` + ${toHindi(carry)} (المحمول)`;
+            }
+            document.getElementById('step-instruction-text').innerText = text;
+        }
+
+        function pressDigit(digitStr) {
+            playClickSound();
+            currentInputBuffer += digitStr;
+            const resBox = document.getElementById(`res-d${currentStepIndex}`);
+            resBox.innerText = currentInputBuffer;
+        }
+
+        function clearInput() {
+            playClickSound();
+            currentInputBuffer = '';
+            const resBox = document.getElementById(`res-d${currentStepIndex}`);
+            resBox.innerText = '؟';
+        }
+
+        function submitStepAnswer() {
+            if(!currentInputBuffer) {
+                showModal('تنبيه', 'يرجى إدخال الإجابة أولاً باستخدام الأرقام الهندية!', 'fa-exclamation-triangle', 'bg-amber-100 text-amber-600');
+                return;
+            }
+
+            const p1 = digits1[3 - currentStepIndex];
+            const p2 = digits2[3 - currentStepIndex];
+            const carry = carries[currentStepIndex];
+            const correctSum = p1 + p2 + carry;
+
+            const userVal = parseInt(toStandard(currentInputBuffer));
+
+            if(userVal === correctSum || userVal === (correctSum % 10)) {
+                // Correct for this column!
+                playSuccessSound();
+                
+                const digitToKeep = correctSum % 10;
+                const nextCarry = Math.floor(correctSum / 10);
+
+                userResultDigits[currentStepIndex] = toHindi(digitToKeep);
+                document.getElementById(`res-d${currentStepIndex}`).innerText = toHindi(digitToKeep);
+
+                // Handle carry over to next place if applicable
+                if(nextCarry > 0 && currentStepIndex < 3) {
+                    carries[currentStepIndex + 1] = nextCarry;
+                    const carryBox = document.getElementById(`carry-box-${currentStepIndex + 1}`);
+                    carryBox.innerText = toHindi(nextCarry);
+                    carryBox.classList.add('active', 'bg-amber-100');
+                }
+
+                currentStepIndex++;
+                addPoints(10);
+
+                if(currentStepIndex > 3) {
+                    // Problem completed!
+                    verticalCorrectCount++;
+                    checkBadges();
+                    showModal('أحسنت يا بطل! 🎉', `لقد أكملت مسألة الجمع العمودي بنجاح! المجموع الكلي هو: ${toHindi(num1 + num2)}`, 'fa-trophy', 'bg-emerald-100 text-emerald-600');
+                    setTimeout(newVerticalProblem, 1500);
+                } else {
+                    updateVerticalStepUI();
+                }
+
+            } else {
+                playErrorSound();
+                showModal('حاول مرة أخرى', `مجموع أرقام منزلة ${placeNames[currentStepIndex]} هـو ${toHindi(correctSum)}. تذكر جمع المحمول إن وجد!`, 'fa-circle-xmark', 'bg-rose-100 text-rose-600');
+                clearInput();
+            }
+        }
+
+        function showVerticalHint() {
+            const p1 = digits1[3 - currentStepIndex];
+            const p2 = digits2[3 - currentStepIndex];
+            const carry = carries[currentStepIndex];
+            const sum = p1 + p2 + carry;
+
+            let hint = `في منزلة ${placeNames[currentStepIndex]}: ${toHindi(p1)} + ${toHindi(p2)}`;
+            if(carry > 0) hint += ` مع ١ محمول يساوي ${toHindi(sum)}.`;
+            if(sum >= 10) hint += ` نضع الرقم ${toHindi(sum % 10)} ونحمل ١ للمنزلة التالية.`;
+
+            showModal('مساعدة الخوارزمي 💡', hint, 'fa-lightbulb', 'bg-amber-100 text-amber-600');
+        }
+
+        const storyQuests = [
+            {
+                subject: 'islamic',
+                subjectTitle: 'التربية الإسلامية: زكاة المال والصدقات',
+                icon: 'fa-mosque',
+                badgeBg: 'bg-emerald-600',
+                storyTitle: 'حساب طرود الخير في شهر رمضان',
+                storyBody: 'وزعت جمعية البر والتقوى ٣٤٥٠ طرداً غذائياً في الأسبوع الأول من شهر رمضان المبارك، ثم وزعت ٢٧٨٥ طرداً في الأسبوع الثاني. ما مجموع الطرود الموزعة؟',
+                num1: 3450,
+                num2: 2785,
+                fact: 'قيمة إسلامية: قال رسول الله ﷺ: "أَحَبُّ الأَعْمَالِ إِلَى اللَّهِ سُرُورٌ تُدْخِلُهُ عَلَى مُسْلِمٍ".'
+            },
+            {
+                subject: 'arabic',
+                subjectTitle: 'اللغة العربية: إهداءات المكتبة المدرسة',
+                icon: 'fa-book',
+                badgeBg: 'bg-amber-600',
+                storyTitle: 'إثراء المكتبة بالكتب والأشعار',
+                storyBody: 'تحتوي مكتبة فاروق الأدبية على ٤٢٣٠ كتاباً في الشعر والأدب، وأهداها مجلس الأهل ١٥٦٠ كتاباً علمياً وجديداً. كم أصبحت حصيلة الكتب بالمكتبة؟',
+                num1: 4230,
+                num2: 1560,
+                fact: 'حكمة عربية: "الْكِتَابُ هُوَ الصَّدِيقُ الَّذِي لَا يَخُونُ، وَالْمُعَلِّمُ الَّذِي لَا يَمَلُّ".'
+            },
+            {
+                subject: 'national',
+                subjectTitle: 'التنشئة الوطنية: رحاب الوطن والعودة',
+                icon: 'fa-map-location-dot',
+                badgeBg: 'bg-indigo-600',
+                storyTitle: 'زراعة أشجار الزيتون في جبال الوطن',
+                storyBody: 'غرس المتطوعون في يوم الشجرة ٢٤٥٠ شتلة زيتون في جبال القدس، و٣٦٨٠ شتلة أخرى في جبال الخليل. ما مجموع الأشجار المغروسة؟',
+                num1: 2450,
+                num2: 3680,
+                fact: 'معلومة وطنية: شجرة الزيتون في فلسطين رمز للصمود والعطاء وتعيش مئات السنين.'
+            },
+            {
+                subject: 'islamic',
+                subjectTitle: 'التربية الإسلامية: بناء وعمارة المساجد',
+                icon: 'fa-hand-holding-heart',
+                badgeBg: 'bg-emerald-600',
+                storyTitle: 'المساهمة في التبرعات الخيرية',
+                storyBody: 'تلقى الصندوق الخيري لبناء المركز الإسلامي ٥١٢٠ ديناراً في الشهر الأول، ثم تبرع أهل الخير بـ ٣٨٥٠ ديناراً في الشهر الثاني. كم المجموع الكلي للتبرعات؟',
+                num1: 5120,
+                num2: 3850,
+                fact: 'حديث شريف: "مَنْ بَنَى مَسْجِدًا لِلَّهِ بَنَى اللَّهُ لَهُ مِثْلَهُ فِي الْجَنَّةِ".'
+            },
+            {
+                subject: 'national',
+                subjectTitle: 'التنشئة الوطنية: المسافات بين المدن',
+                icon: 'fa-compass',
+                badgeBg: 'bg-indigo-600',
+                storyTitle: 'جولة الحافلة المدرسية بين المدن',
+                storyBody: 'قطعت الحافلة الاستكشافية مسافة ١٢٥٠ كيلومتراً بين القدس وحيفا، ثم قطعت ٣٤٢٠ كيلومتراً في جولة نابلية وخليلية. كم المجموع الكلي للمسافة؟',
+                num1: 1250,
+                num2: 3420,
+                fact: 'جغرافية الوطن: تتميز مدن فلسطين بالتنوع الجغرافي الفريد بين الساحل والجبل والغور.'
+            }
+        ];
+
+        let currentQuestIndex = 0;
+        let filteredQuests = [...storyQuests];
+
+        function loadQuest() {
+            const quest = filteredQuests[currentQuestIndex];
+            if(!quest) return;
+
+            document.getElementById('quest-subject-title').innerText = quest.subjectTitle;
+            document.getElementById('quest-subject-tag').className = `px-3.5 py-1 rounded-full text-xs font-black text-white flex items-center gap-1.5 ${quest.badgeBg}`;
+            document.getElementById('quest-subject-icon').className = `fa-solid ${quest.icon}`;
+            
+            document.getElementById('quest-story-title').innerText = quest.storyTitle;
+            document.getElementById('quest-story-body').innerText = quest.storyBody;
+            
+            document.getElementById('quest-num1').innerText = toHindi(quest.num1);
+            document.getElementById('quest-num2').innerText = toHindi(quest.num2);
+            document.getElementById('quest-user-ans').innerText = '؟';
+            document.getElementById('quest-fact-text').innerText = quest.fact;
+            document.getElementById('quest-manual-input').value = '';
+
+            // Generate Multiple Choice Options
+            const correctSum = quest.num1 + quest.num2;
+            const options = [correctSum];
+            
+            while(options.length < 3) {
+                const wrongOpt = correctSum + (Math.floor(Math.random() * 5) - 2) * 100 + (Math.floor(Math.random() * 9) - 4);
+                if(wrongOpt !== correctSum && !options.includes(wrongOpt) && wrongOpt > 1000) {
+                    options.push(wrongOpt);
+                }
+            }
+
+            // Shuffle options
+            options.sort(() => Math.random() - 0.5);
+
+            const container = document.getElementById('quest-options-container');
+            container.innerHTML = '';
+
+            options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'w-full btn-game bg-white hover:bg-emerald-50 text-slate-800 border-2 border-slate-200 hover:border-emerald-500 font-black py-2.5 px-4 rounded-xl text-lg dir-rtl transition flex justify-between items-center';
+                btn.innerHTML = `<span>${toHindi(opt)}</span> <i class="fa-regular fa-circle text-slate-300"></i>`;
+                btn.onclick = () => {
+                    document.getElementById('quest-manual-input').value = toHindi(opt);
+                    document.getElementById('quest-user-ans').innerText = toHindi(opt);
+                    playClickSound();
+                };
+                container.appendChild(btn);
+            });
+        }
+
+        function filterQuests(type) {
+            playClickSound();
+            document.querySelectorAll('.quest-filter').forEach(btn => btn.classList.remove('active', 'bg-slate-800', 'text-white'));
+            
+            if(type === 'all') filteredQuests = [...storyQuests];
+            else filteredQuests = storyQuests.filter(q => q.subject === type);
+
+            currentQuestIndex = 0;
+            loadQuest();
+        }
+
+        function pressQuestDigit(d) {
+            playClickSound();
+            const input = document.getElementById('quest-manual-input');
+            input.value += d;
+            document.getElementById('quest-user-ans').innerText = input.value;
+        }
+
+        function clearQuestInput() {
+            playClickSound();
+            document.getElementById('quest-manual-input').value = '';
+            document.getElementById('quest-user-ans').innerText = '؟';
+        }
+
+        function submitQuestAnswer() {
+            const inputVal = document.getElementById('quest-manual-input').value;
+            if(!inputVal) {
+                showModal('تنبيه', 'يرجى اختيار أو كتابة الناتج بالأرقام الهندية!', 'fa-exclamation-circle', 'bg-amber-100 text-amber-600');
+                return;
+            }
+
+            const quest = filteredQuests[currentQuestIndex];
+            const expectedSum = quest.num1 + quest.num2;
+            const userSum = parseInt(toStandard(inputVal));
+
+            if(userSum === expectedSum) {
+                playSuccessSound();
+                addPoints(20);
+
+                if(quest.subject === 'arabic') arabicCorrectCount++;
+                if(quest.subject === 'islamic') islamicCorrectCount++;
+                if(quest.subject === 'national') nationalCorrectCount++;
+
+                checkBadges();
+
+                showModal('إجابة رائعة وصحيحة! 🌟', `أحسنت في حساب النتيجة والتكامل مع مادة ${quest.subjectTitle}!`, 'fa-circle-check', 'bg-emerald-100 text-emerald-600');
+
+                currentQuestIndex = (currentQuestIndex + 1) % filteredQuests.length;
+                setTimeout(loadQuest, 1500);
+            } else {
+                playErrorSound();
+                showModal('حاول مجدداً', `تأكد من جمع الآحاد أولاً ثم العشرات فالمئات فأحاد الألوف!`, 'fa-circle-xmark', 'bg-rose-100 text-rose-600');
+            }
+        }
+
+        let speedTimerInterval = null;
+        let speedTimeLeft = 60;
+        let speedScore = 0;
+        let speedNum1 = 0, speedNum2 = 0;
+
+        function startSpeedGame() {
+            playClickSound();
+            speedScore = 0;
+            speedTimeLeft = 60;
+            document.getElementById('speed-score').innerText = '٠';
+            document.getElementById('speed-timer').innerText = toHindi(60);
+            document.getElementById('start-speed-btn').classList.add('hidden');
+
+            generateSpeedEquation();
+
+            if(speedTimerInterval) clearInterval(speedTimerInterval);
+
+            speedTimerInterval = setInterval(() => {
+                speedTimeLeft--;
+                document.getElementById('speed-timer').innerText = toHindi(speedTimeLeft);
+
+                if(speedTimeLeft <= 0) {
+                    clearInterval(speedTimerInterval);
+                    playSuccessSound();
+                    showModal('انتهى التحدي السريع! ⚡', `لقد أتممت ${toHindi(speedScore)} إجابات صحيحة في اختبار الخوارزمي!`, 'fa-bolt', 'bg-indigo-100 text-indigo-600');
+                    document.getElementById('start-speed-btn').classList.remove('hidden');
+                }
+            }, 1000);
+        }
+
+        function generateSpeedEquation() {
+            speedNum1 = Math.floor(Math.random() * 4000) + 1000;
+            speedNum2 = Math.floor(Math.random() * 4000) + 1000;
+            document.getElementById('speed-equation').innerText = `${toHindi(speedNum1)} + ${toHindi(speedNum2)} = ؟`;
+            document.getElementById('speed-input').value = '';
+        }
+
+        function pressSpeedDigit(d) {
+            playClickSound();
+            document.getElementById('speed-input').value += d;
+        }
+
+        function clearSpeedInput() {
+            playClickSound();
+            document.getElementById('speed-input').value = '';
+        }
+
+        function submitSpeedAnswer() {
+            const val = document.getElementById('speed-input').value;
+            if(!val) return;
+
+            const expected = speedNum1 + speedNum2;
+            const actual = parseInt(toStandard(val));
+
+            if(actual === expected) {
+                playSuccessSound();
+                speedScore++;
+                addPoints(15);
+                document.getElementById('speed-score').innerText = toHindi(speedScore);
+                generateSpeedEquation();
+            } else {
+                playErrorSound();
+                document.getElementById('speed-input').value = '';
+            }
+        }
+
+        function addPoints(pts) {
+            score += pts;
+            streak++;
+            document.getElementById('score-display').innerText = toHindi(score);
+            document.getElementById('streak-display').innerText = toHindi(streak);
+            updateTreeProgress();
+        }
+
+        function updateTreeProgress() {
+            const treeIcon = document.getElementById('tree-icon');
+            const treeStageTitle = document.getElementById('tree-stage-title');
+            const progressBar = document.getElementById('tree-progress-bar');
+            const progressText = document.getElementById('tree-progress-text');
+
+            const pct = Math.min(100, Math.floor((score / 200) * 100));
+            progressBar.style.width = `${pct}%`;
+            progressText.innerText = `${toHindi(score)} / ٢٠٠ نقطة`;
+
+            if(score >= 150) {
+                treeIcon.className = 'fa-solid fa-tree text-emerald-400 text-9xl bounce-gentle';
+                treeStageTitle.innerText = 'المرحلة ٤: شجرة زيتون مثمرة وشامخة';
+            } else if(score >= 100) {
+                treeIcon.className = 'fa-solid fa-tree text-emerald-500 text-8xl bounce-gentle';
+                treeStageTitle.innerText = 'المرحلة ٣: شجرة مورقة وجذور راسخة';
+            } else if(score >= 50) {
+                treeIcon.className = 'fa-solid fa-plant-wilt text-teal-300 text-7xl bounce-gentle';
+                treeStageTitle.innerText = 'المرحلة ٢: غرسة فتية تنمو بالمعرفة';
+            } else {
+                treeIcon.className = 'fa-solid fa-seedling text-emerald-400 text-6xl bounce-gentle';
+                treeStageTitle.innerText = 'المرحلة ١: الشتلة الأولى';
+            }
+        }
+
+        function checkBadges() {
+            if(verticalCorrectCount >= 3) unlockBadge('badge-khwarizmi');
+            if(arabicCorrectCount >= 2) unlockBadge('badge-arabic');
+            if(islamicCorrectCount >= 2) unlockBadge('badge-islamic');
+            if(nationalCorrectCount >= 2) unlockBadge('badge-national');
+        }
+
+        function unlockBadge(badgeId) {
+            const b = document.getElementById(badgeId);
+            if(b && b.classList.contains('opacity-60')) {
+                b.classList.remove('opacity-60', 'bg-slate-50');
+                b.classList.add('bg-amber-50', 'border-amber-400', 'shadow-md');
+            }
+        }
+
+        function switchMode(mode) {
+            playClickSound();
+            currentMode = mode;
+
+            document.querySelectorAll('.mode-section').forEach(sec => sec.classList.add('hidden'));
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.className = 'btn-game nav-btn bg-white text-slate-700 border-2 border-slate-200 hover:border-amber-400 p-3 rounded-2xl flex items-center justify-center gap-2 font-bold text-sm md:text-base';
+            });
+
+            document.getElementById(`mode-${mode}`).classList.remove('hidden');
+            const activeNav = document.getElementById(`nav-${mode}`);
+            activeNav.className = 'btn-game nav-btn active bg-amber-500 text-amber-950 border-2 border-amber-300 p-3 rounded-2xl flex items-center justify-center gap-2 font-bold text-sm md:text-base';
+
+            if(mode === 'integration') loadQuest();
+        }
+
+        /* Modal system */
+        function showModal(title, body, iconClass, iconBgClass) {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-body').innerText = body;
+            
+            const iconEl = document.getElementById('modal-icon');
+            const bgEl = document.getElementById('modal-icon-bg');
+            
+            iconEl.className = `fa-solid ${iconClass}`;
+            bgEl.className = `w-16 h-16 rounded-full flex items-center justify-center text-3xl mx-auto mb-3 ${iconBgClass}`;
+
+            document.getElementById('custom-modal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            playClickSound();
+            document.getElementById('custom-modal').classList.add('hidden');
+        }
+
+        window.onload = function() {
+            newVerticalProblem();
+
+            // Keyboard Physical Keypress Listener
+            document.addEventListener('keydown', (e) => {
+                const key = e.key;
+                const standardToHindi = { '0':'٠', '1':'١', '2':'٢', '3':'٣', '4':'٤', '5':'٥', '6':'٦', '7':'٧', '8':'٨', '9':'٩' };
+                
+                if (HINDI_DIGITS.includes(key)) {
+                    if (currentMode === 'vertical') pressDigit(key);
+                    if (currentMode === 'integration') pressQuestDigit(key);
+                    if (currentMode === 'speed') pressSpeedDigit(key);
+                } else if (standardToHindi[key]) {
+                    const hindi = standardToHindi[key];
+                    if (currentMode === 'vertical') pressDigit(hindi);
+                    if (currentMode === 'integration') pressQuestDigit(hindi);
+                    if (currentMode === 'speed') pressSpeedDigit(hindi);
+                } else if (key === 'Enter') {
+                    if (currentMode === 'vertical') submitStepAnswer();
+                    if (currentMode === 'integration') submitQuestAnswer();
+                    if (currentMode === 'speed') submitSpeedAnswer();
+                } else if (key === 'Backspace') {
+                    if (currentMode === 'vertical') clearInput();
+                    if (currentMode === 'integration') clearQuestInput();
+                    if (currentMode === 'speed') clearSpeedInput();
+                }
+            });
+        };
+    </script>
+</body>
+</html>
